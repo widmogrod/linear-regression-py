@@ -6,8 +6,6 @@ print(dataset)
 Y_hat = lambda x, A, B: A*x +B
 Y_hat = curry(Y_hat)
 
-print(Y_hat(1,1,1))
-
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -22,9 +20,20 @@ class Point:
     def __str__(self):
         return 'Point(%f,%f)' % (self.x, self.y)
 
-def gradient_descent(learning_rate, A_point, df):
+def gradient_descent_step(learning_rate, A_point, df):
     return A_point - (df(A_point) * learning_rate)
 
+def gradient_descent(point, convergent):
+    old = point
+    point = gradient_descent_step(0.01, point, gradient_of_least_squers(datapoints))
+
+    is_convergent = lambda point, old: abs(point.x-old.x) < convergent and abs(point.y - old.y) < convergent
+
+    while not is_convergent(point, old):
+        old = point
+        point = gradient_descent_step(0.01, point, gradient_of_least_squers(datapoints))
+
+    return point
 
 @curry
 def gradient_of_least_squers(datapoints, point):
@@ -41,16 +50,8 @@ apply_tuple = curry(apply_tuple)
 datapoints = list(map(apply_tuple(Point), dataset))
 print(list(map(str, datapoints)))
 
-old = Point(0,0)
-new = Point(1,1)
-convergent = 0.1
+convergent = 0.0000001
+new = gradient_descent(Point(0,0), convergent)
 
-while abs(new.x-old.x) > convergent or abs(new.y - old.y) > convergent:
-    new = gradient_descent(0.001, old, gradient_of_least_squers(datapoints))
-    print (new, '->', old)
-    print (abs(new.x-old.x))
-    print (abs(new.x-old.x) > convergent)
-    old = new
-
-print (old)
-print(list(map(str, map(lambda p: (Y_hat(p.x, old.x, old.y), p.y), datapoints))))
+print (new)
+print(list(map(str, map(lambda p: (Y_hat(p.x, new.x, new.y), p.y), datapoints))))
