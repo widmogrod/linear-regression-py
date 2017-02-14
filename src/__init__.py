@@ -1,11 +1,4 @@
 from toolz import curry
-
-dataset = [(1,1), (2,2), (3,3), (4,4)]
-print(dataset)
-
-Y_hat = lambda x, A, B: A*x +B
-Y_hat = curry(Y_hat)
-
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -46,6 +39,11 @@ def gradient_of_least_squers(datapoints, point):
 
 apply_tuple = lambda f, t: f(*t)
 apply_tuple = curry(apply_tuple)
+
+dataset = [(1,1), (2,2), (3,3), (4,4)]
+
+Y_hat = lambda x, A, B: A*x +B
+Y_hat = curry(Y_hat)
 
 datapoints = list(map(apply_tuple(Point), dataset))
 print(list(map(str, datapoints)))
