@@ -1,4 +1,6 @@
 from toolz import curry
+import matplotlib.pyplot as plt
+
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -49,7 +51,13 @@ datapoints = list(map(apply_tuple(Point), dataset))
 print(list(map(str, datapoints)))
 
 convergent = 0.0000001
-new = gradient_descent(Point(0,0), convergent)
+B1B2 = gradient_descent(Point(0,0), convergent)
 
-print (new)
-print(list(map(str, map(lambda p: (Y_hat(p.x, new.x, new.y), p.y), datapoints))))
+print (B1B2)
+print(list(map(str, map(lambda p: (Y_hat(p.x, B1B2.x, B1B2.y), p.y), datapoints))))
+
+Y_hat_datapoints=list(map(lambda p: (p.x, Y_hat(p.x, B1B2.x, B1B2.y)), datapoints))
+
+plt.plot(dataset, 'r.')
+plt.plot(Y_hat_datapoints, 'g--')
+plt.savefig('line.png')
