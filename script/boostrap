@@ -1,1 +1,4 @@
-docker build .
+#!/bin/bash
+set -e
+
+docker build -t widmogrod/linear-regression-py .

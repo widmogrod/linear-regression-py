@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+docker run \
+    --rm \
+    --entrypoint=python3 \
+    -w /linear-regression-py \
+    -v $(pwd):/linear-regression-py \
+    widmogrod/linear-regression-py \
+    $@
