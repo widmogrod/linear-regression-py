@@ -26,13 +26,21 @@ class Point:
     def __str__(self):
         return 'Point(%f,%f)' % (self.x, self.y)
 
+    def l2(self):
+        return sqrt((self.x * self.x) + (self.y * self.y))
+
 
 def gradient_descent_step(learning_rate, A_point, df):
     return A_point - (df(A_point) * learning_rate)
 
 
 def least_squere_error(point, datapoints):
-    return sum([(point.y + (point.x * p.x) - p.y)**2 for p in datapoints])/len(datapoints)
+    return sum([(point.y + (point.x * p.x) - p.y)**2 for p in datapoints]) / len(datapoints)
+
+
+def least_squere_error_with_L2(point, datapoints):
+    bias = point.l2()
+    return least_squere_error(point, datapoints) + bias
 
 
 def gradient_descent(point, learning_rate, error_treshold, max_iterations, datapoints):
@@ -81,6 +89,34 @@ def stochastic_gradient_descent(point, learning_rate, error_treshold, max_iterat
                 learning_rate, point, stochastic_df(p))
 
         e = least_squere_error(point, datapoints)
+        if abs(E - e) > error_treshold:
+            E = e
+        else:
+            return point
+
+    return point
+
+
+
+@curry
+def gradient_of_least_squers_polynomial(datapoints, point):
+    A = point.x
+    B = point.y
+    C = point.z
+    return Point3(
+        x=sum(map(lambda p: (((A * p.x + B) - p.y)), datapoints)) * 1/ len(datapoints),
+        y=sum(map(lambda p: (((A * p.x + B) - p.y)), datapoints)) * p.y / len(datapoints)
+        z=sum(map(lambda p: (((A * p.x + B) - p.y)), datapoints)) * p.z^2 / len(datapoints)
+    )
+
+
+def gradient_descent_polynomial(point, learning_rate, error_treshold, max_iterations, datapoints):
+    E = 0
+    for i in range(max_iterations):
+        point = gradient_descent_step(
+            learning_rate, point, gradient_of_least_squers_polynomial(datapoints))
+
+        e = least_squere_error_with_l2(point, datapoints)
         if abs(E - e) > error_treshold:
             E = e
         else:
@@ -198,7 +234,7 @@ plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints_b), 'y--')
 plt.axis(xmin=0, ymin=0)
 
-sin_x = np.linspace(0, pi*2, 25)
+sin_x = np.linspace(0, pi * 2, 25)
 sin_y = [sin(x) for x in sin_x]
 sin_y += np.random.normal(scale=0.1, size=25)
 
