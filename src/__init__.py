@@ -30,6 +30,34 @@ class Point:
         return sqrt((self.x * self.x) + (self.y * self.y))
 
 
+class Point3:
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+    def __mul__(self, value):
+        return Point3(value * self.x, value * self.y, value * self.z)
+
+    def __sub__(self, point):
+        return Point3(self.x - point.x, self.y - point.y, self.z - point.z)
+
+    def __getitem__(self, key):
+        if key == 0:
+            return self.x
+        if key == 1:
+            return self.y
+
+        return self.z
+
+    def __str__(self):
+        return 'Point3(%f,%f,%f)' % (self.x, self.y, self.z)
+
+    def l2(self):
+        return sqrt((self.x * self.x) + (self.y * self.y) + (self.z * self.z))
+
+
 def gradient_descent_step(learning_rate, A_point, df):
     return A_point - (df(A_point) * learning_rate)
 
@@ -63,8 +91,7 @@ def gradient_of_least_squers(datapoints, point):
     A = point.x
     B = point.y
     return Point(
-        x=sum(map(lambda p: (((A * p.x + B) - p.y) * p.x),
-                  datapoints)) / len(datapoints),
+        x=sum(map(lambda p: (((A * p.x + B) - p.y) * p.x), datapoints)) / len(datapoints),
         y=sum(map(lambda p: (((A * p.x + B) - p.y)), datapoints)) / len(datapoints)
     )
 
@@ -99,14 +126,14 @@ def stochastic_gradient_descent(point, learning_rate, error_treshold, max_iterat
 
 
 @curry
-def gradient_of_least_squers_polynomial(datapoints, point):
-    A = point.x
-    B = point.y
-    C = point.z
+def gradient_of_least_squers_polynomial(datapoints, betas):
+    A = betas.x
+    B = betas.y
+    C = betas.z
     return Point3(
-        x=sum(map(lambda p: (((A * p.x + B) - p.y)), datapoints)) * 1/ len(datapoints),
-        y=sum(map(lambda p: (((A * p.x + B) - p.y)), datapoints)) * p.y / len(datapoints)
-        z=sum(map(lambda p: (((A * p.x + B) - p.y)), datapoints)) * p.z^2 / len(datapoints)
+        x=sum(map(lambda p: (((A + (p.x*B) + (p.x*p.x*C)) - p.y) * 1), datapoints))/ len(datapoints),
+        y=sum(map(lambda p: (((A + (p.x*B) + (p.x*p.x*C)) - p.y) * p.x), datapoints)) / len(datapoints),
+        z=sum(map(lambda p: (((A + (p.x*B) + (p.x*p.x*C)) - p.y) * p.x*p.x), datapoints)) / len(datapoints)
     )
 
 
@@ -116,7 +143,7 @@ def gradient_descent_polynomial(point, learning_rate, error_treshold, max_iterat
         point = gradient_descent_step(
             learning_rate, point, gradient_of_least_squers_polynomial(datapoints))
 
-        e = least_squere_error_with_l2(point, datapoints)
+        e = least_squere_error(point, datapoints)
         if abs(E - e) > error_treshold:
             E = e
         else:
@@ -194,6 +221,7 @@ dataset = [
 Y_hat = lambda x, A, B: A * x + B
 Y_hat = curry(Y_hat)
 
+
 datapoints = [Point(x[0], x[1]) for x in dataset]
 
 B1B2 = gradient_descent(point=Point(0, 0),
@@ -201,23 +229,46 @@ B1B2 = gradient_descent(point=Point(0, 0),
                         error_treshold=0.001,
                         max_iterations=1000,
                         datapoints=datapoints)
-print(B1B2)
+print("B1B2 gradient descent=", B1B2)
 
 B1B2_b = stochastic_gradient_descent(point=Point(0, 0),
                                      learning_rate=0.001,
                                      error_treshold=0.001,
                                      max_iterations=1000,
                                      datapoints=datapoints)
-print(B1B2_b)
+
+print("B1B2 stochstic gradient descent=", B1B2_b)
 
 Y_hat_datapoints = list(
     map(lambda p: (p.x, Y_hat(p.x, B1B2.x, B1B2.y)), datapoints))
 Y_hat_datapoints_b = list(
     map(lambda p: (p.x, Y_hat(p.x, B1B2_b.x, B1B2_b.y)), datapoints))
 
+
+"Poly - start"
+Y_hat_poly = lambda x, A, B, C: (A + (x*B) + (x*x*C))
+Y_hat_poly = curry(Y_hat_poly)
+
+samples=30
+sin_x = np.linspace(0, pi, samples)
+sin_y = [sin(x) for x in sin_x]
+sin_y += np.random.normal(scale=0.1, size=samples)
+poly_dataset = [(x[0], x[1]) for x in zip(sin_x, sin_y)]
+poly_datapoints = [Point(x[0], x[1]) for x in poly_dataset]
+
+B1B2B3_a = gradient_descent_polynomial(point=Point3(0, 0, 0),
+                                     learning_rate=0.001,
+                                     error_treshold=0.001,
+                                     max_iterations=2000,
+                                     datapoints=poly_datapoints)
+
+print("B1B2B3 gradient descent polynomial =", B1B2B3_a)
+
+Y_hat_poly_datapoints_q = list(map(lambda p: (p.x, Y_hat_poly(p.x, B1B2B3_a.x, B1B2B3_a.y, B1B2B3_a.z)), poly_datapoints))
+"Poly = end"
+
+
 "PLOT:"
-
-
 def to_x_y(dataset):
     return [[t[0] for t in dataset], [t[1] for t in dataset]]
 
@@ -234,12 +285,9 @@ plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints_b), 'y--')
 plt.axis(xmin=0, ymin=0)
 
-sin_x = np.linspace(0, pi * 2, 25)
-sin_y = [sin(x) for x in sin_x]
-sin_y += np.random.normal(scale=0.1, size=25)
-
 "Plot sinusoid data"
 plt.subplot(2, 2, 3)
 plt.title("Polynomial")
-plt.plot(sin_x, sin_y, 'r.')
+plt.plot(*to_x_y(poly_dataset), 'r.')
+plt.plot(*to_x_y(Y_hat_poly_datapoints_q), 'y--')
 plt.savefig('line.png')
