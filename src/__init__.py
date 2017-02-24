@@ -1,4 +1,6 @@
 from toolz import curry
+import numpy as np
+from numpy import sin, pi
 import matplotlib.pyplot as plt
 from random import shuffle
 
@@ -195,4 +197,13 @@ plt.title("Stochastic Gradient Descent")
 plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints_b), 'y--')
 plt.axis(xmin=0, ymin=0)
+
+sin_x = np.linspace(0, pi*2, 25)
+sin_y = [sin(x) for x in sin_x]
+sin_y += np.random.normal(scale=0.1, size=25)
+
+"Plot sinusoid data"
+plt.subplot(2, 2, 3)
+plt.title("Polynomial")
+plt.plot(sin_x, sin_y, 'r.')
 plt.savefig('line.png')
