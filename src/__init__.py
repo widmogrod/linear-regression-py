@@ -1,4 +1,5 @@
 from toolz import curry
+from math import sqrt
 import numpy as np
 from numpy import sin, pi
 import matplotlib.pyplot as plt
@@ -58,7 +59,7 @@ class Point4:
         return 'Point4(%f,%f,%f,%f)' % (self.x, self.y, self.z, self.q)
 
     def l2(self):
-        return sqrt(self.x**2 + self.y**2 + self.z**2 + self.q**2 )
+        return sqrt(self.x**2 + self.y**2 + self.z**2 + self.q**2)
 
 
 def gradient_descent_step(learning_rate, A_point, df):
@@ -85,9 +86,9 @@ def least_squere_error_polynomial(point, datapoints):
     return least_squere_error_method(Y_hat, point, datapoints)
 
 
-def least_squere_error_with_L2(point, datapoints):
+def least_squere_error_polynomial_with_L2(point, datapoints):
     bias = point.l2()
-    return least_squere_error(point, datapoints) + bias
+    return least_squere_error_polynomial(point, datapoints) + bias
 
 
 def gradient_descent(point, learning_rate, error_treshold, max_iterations, datapoints):
@@ -130,7 +131,6 @@ def stochastic_gradient_descent(point, learning_rate, error_treshold, max_iterat
     for i in range(max_iterations):
         shuffle(datapoints)
         for p in datapoints:
-            old = point
             point = gradient_descent_step(
                 learning_rate, point, stochastic_df(p))
 
@@ -158,13 +158,25 @@ def gradient_of_least_squers_polynomial(datapoints, betas):
     )
 
 
+@curry
+def gradient_of_least_squers_polynomial_with_l2(datapoints, betas):
+    l2 = betas.l2()
+    p = gradient_of_least_squers_polynomial(datapoints, betas)
+    return Point4(
+            x=p[0] + betas[0]/l2,
+            y=p[1] + betas[1]/l2,
+            z=p[2] + betas[2]/l2,
+            q=p[3] + betas[3]/l2
+            )
+
+
 def gradient_descent_polynomial(point, learning_rate, error_treshold, max_iterations, datapoints):
     E = 0
     for i in range(max_iterations):
         point = gradient_descent_step(
-            learning_rate, point, gradient_of_least_squers_polynomial(datapoints))
+            learning_rate, point, gradient_of_least_squers_polynomial_with_l2(datapoints))
 
-        e = least_squere_error_polynomial(point, datapoints)
+        e = least_squere_error_polynomial_with_L2(point, datapoints)
         if abs(E - e) > error_treshold:
             E = e
         else:
@@ -277,10 +289,10 @@ sin_y += np.random.normal(scale=0.1, size=samples)
 poly_dataset = [(x[0], x[1]) for x in zip(sin_x, sin_y)]
 poly_datapoints = [Point(x[0], x[1]) for x in poly_dataset]
 
-P4 = gradient_descent_polynomial(point=Point4(0, 0, 0, 0),
-                                     learning_rate=0.01,
+P4 = gradient_descent_polynomial(point=Point4(1, 1, 1, 1),
+                                     learning_rate=0.0001,
                                      error_treshold=0.0001,
-                                     max_iterations=2000,
+                                     max_iterations=1000,
                                      datapoints=poly_datapoints)
 
 print("B1B2B3 gradient descent polynomial =", P4)
