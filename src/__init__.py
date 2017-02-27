@@ -30,40 +30,59 @@ class Point:
         return sqrt((self.x * self.x) + (self.y * self.y))
 
 
-class Point3:
+class Point4:
 
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z, q):
         self.x = x
         self.y = y
         self.z = z
+        self.q = q
 
     def __mul__(self, value):
-        return Point3(value * self.x, value * self.y, value * self.z)
+        return Point4(value * self.x, value * self.y, value * self.z, value * self.q)
 
     def __sub__(self, point):
-        return Point3(self.x - point.x, self.y - point.y, self.z - point.z)
+        return Point4(self.x - point.x, self.y - point.y, self.z - point.z, self.q - point.q)
 
     def __getitem__(self, key):
         if key == 0:
             return self.x
         if key == 1:
             return self.y
+        if key == 2:
+            return self.z
 
-        return self.z
+        return self.q
 
     def __str__(self):
-        return 'Point3(%f,%f,%f)' % (self.x, self.y, self.z)
+        return 'Point4(%f,%f,%f,%f)' % (self.x, self.y, self.z, self.q)
 
     def l2(self):
-        return sqrt((self.x * self.x) + (self.y * self.y) + (self.z * self.z))
+        return sqrt(self.x**2 + self.y**2 + self.z**2 + self.q**2 )
 
 
 def gradient_descent_step(learning_rate, A_point, df):
     return A_point - (df(A_point) * learning_rate)
 
 
+@curry
+def least_squere_error_method(Y_hat, coefficients, datapoints):
+    return sum([(Y_hat(p, coefficients) - p.y)**2 for p in datapoints]) / len(datapoints)
+
 def least_squere_error(point, datapoints):
-    return sum([(point.y + (point.x * p.x) - p.y)**2 for p in datapoints]) / len(datapoints)
+    def Y_hat(p, coefficients):
+        return coefficients[0]*p.x**0 + coefficients[1]*p.x**1
+
+    return least_squere_error_method(Y_hat, point, datapoints)
+
+def least_squere_error_poli(point, datapoints):
+    def Y_hat(p, coefficients):
+        return coefficients[0]*p.x**0 \
+             + coefficients[1]*p.x**1 \
+             + coefficients[2]*p.x**2 \
+             + coefficients[3]*p.x**3
+
+    return least_squere_error_method(Y_hat, point, datapoints)
 
 
 def least_squere_error_with_L2(point, datapoints):
@@ -130,10 +149,12 @@ def gradient_of_least_squers_polynomial(datapoints, betas):
     A = betas.x
     B = betas.y
     C = betas.z
-    return Point3(
-        x=sum(map(lambda p: (((A + (p.x*B) + (p.x*p.x*C)) - p.y) * 1), datapoints))/ len(datapoints),
-        y=sum(map(lambda p: (((A + (p.x*B) + (p.x*p.x*C)) - p.y) * p.x), datapoints)) / len(datapoints),
-        z=sum(map(lambda p: (((A + (p.x*B) + (p.x*p.x*C)) - p.y) * p.x*p.x), datapoints)) / len(datapoints)
+    D = betas.q
+    return Point4(
+        x=sum(map(lambda p: (((A + (p.x*B) + (p.x**2*C) + (p.x**3*D)) - p.y) * p.x**0), datapoints)) / len(datapoints),
+        y=sum(map(lambda p: (((A + (p.x*B) + (p.x**2*C) + (p.x**3*D)) - p.y) * p.x**1), datapoints)) / len(datapoints),
+        z=sum(map(lambda p: (((A + (p.x*B) + (p.x**2*C) + (p.x**3*D)) - p.y) * p.x**2), datapoints)) / len(datapoints),
+        q=sum(map(lambda p: (((A + (p.x*B) + (p.x**2*C) + (p.x**3*D)) - p.y) * p.x**3), datapoints)) / len(datapoints)
     )
 
 
@@ -143,7 +164,7 @@ def gradient_descent_polynomial(point, learning_rate, error_treshold, max_iterat
         point = gradient_descent_step(
             learning_rate, point, gradient_of_least_squers_polynomial(datapoints))
 
-        e = least_squere_error(point, datapoints)
+        e = least_squere_error_poli(point, datapoints)
         if abs(E - e) > error_treshold:
             E = e
         else:
@@ -246,25 +267,25 @@ Y_hat_datapoints_b = list(
 
 
 "Poly - start"
-Y_hat_poly = lambda x, A, B, C: (A + (x*B) + (x*x*C))
+Y_hat_poly = lambda x, A, B, C, D: (x**0*A + x**1*B + x**2*C + x**3*D)
 Y_hat_poly = curry(Y_hat_poly)
 
-samples=30
-sin_x = np.linspace(0, pi, samples)
+samples=40
+sin_x = np.linspace(-pi, pi, samples)
 sin_y = [sin(x) for x in sin_x]
 sin_y += np.random.normal(scale=0.1, size=samples)
 poly_dataset = [(x[0], x[1]) for x in zip(sin_x, sin_y)]
 poly_datapoints = [Point(x[0], x[1]) for x in poly_dataset]
 
-B1B2B3_a = gradient_descent_polynomial(point=Point3(0, 0, 0),
-                                     learning_rate=0.001,
-                                     error_treshold=0.001,
+P4 = gradient_descent_polynomial(point=Point4(0, 0, 0, 0),
+                                     learning_rate=0.01,
+                                     error_treshold=0.0001,
                                      max_iterations=2000,
                                      datapoints=poly_datapoints)
 
-print("B1B2B3 gradient descent polynomial =", B1B2B3_a)
+print("B1B2B3 gradient descent polynomial =", P4)
 
-Y_hat_poly_datapoints_q = list(map(lambda p: (p.x, Y_hat_poly(p.x, B1B2B3_a.x, B1B2B3_a.y, B1B2B3_a.z)), poly_datapoints))
+Y_hat_poly_datapoints_q = list(map(lambda p: (p.x, Y_hat_poly(p.x, P4.x, P4.y, P4.z, P4.q)), poly_datapoints))
 "Poly = end"
 
 
