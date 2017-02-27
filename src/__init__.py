@@ -86,7 +86,7 @@ def least_squere_error_polynomial(point, datapoints):
     return least_squere_error_method(Y_hat, point, datapoints)
 
 
-def least_squere_error_polynomial_with_L2(point, datapoints):
+def least_squere_error_polynomial_with_l2(point, datapoints):
     bias = point.l2()
     return least_squere_error_polynomial(point, datapoints) + bias
 
@@ -170,13 +170,14 @@ def gradient_of_least_squers_polynomial_with_l2(datapoints, betas):
             )
 
 
-def gradient_descent_polynomial(point, learning_rate, error_treshold, max_iterations, datapoints):
+def generic_gradient_descent(gradient_func, error_func, point,
+                             learning_rate, error_treshold, max_iterations, datapoints):
     E = 0
     for i in range(max_iterations):
         point = gradient_descent_step(
-            learning_rate, point, gradient_of_least_squers_polynomial_with_l2(datapoints))
+            learning_rate, point, gradient_func(datapoints))
 
-        e = least_squere_error_polynomial_with_L2(point, datapoints)
+        e = error_func(point, datapoints)
         if abs(E - e) > error_treshold:
             E = e
         else:
@@ -251,6 +252,7 @@ dataset = [
 
 ]
 
+
 Y_hat = lambda x, A, B: A * x + B
 Y_hat = curry(Y_hat)
 
@@ -282,28 +284,44 @@ Y_hat_datapoints_b = list(
 Y_hat_poly = lambda x, A, B, C, D: (x**0*A + x**1*B + x**2*C + x**3*D)
 Y_hat_poly = curry(Y_hat_poly)
 
-samples=40
+samples=100
 sin_x = np.linspace(-pi, pi, samples)
 sin_y = [sin(x) for x in sin_x]
 sin_y += np.random.normal(scale=0.1, size=samples)
 poly_dataset = [(x[0], x[1]) for x in zip(sin_x, sin_y)]
 poly_datapoints = [Point(x[0], x[1]) for x in poly_dataset]
 
-P4 = gradient_descent_polynomial(point=Point4(1, 1, 1, 1),
-                                     learning_rate=0.0001,
-                                     error_treshold=0.0001,
-                                     max_iterations=1000,
-                                     datapoints=poly_datapoints)
+P4 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
+                              learning_rate=0.00001,
+                              error_treshold=0.000001,
+                              max_iterations=70000,
+                              datapoints=poly_datapoints,
+                              gradient_func=gradient_of_least_squers_polynomial,
+                              error_func=least_squere_error_polynomial)
 
-print("B1B2B3 gradient descent polynomial =", P4)
 
-Y_hat_poly_datapoints_q = list(map(lambda p: (p.x, Y_hat_poly(p.x, P4.x, P4.y, P4.z, P4.q)), poly_datapoints))
+print("P4 gradient descent polynomial =", P4)
+Y_hat_poly_datapoints_1 = list(map(lambda p: (p.x, Y_hat_poly(p.x, P4.x, P4.y, P4.z, P4.q)), poly_datapoints))
+
+P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
+                              learning_rate=0.00001,
+                              error_treshold=0.000001,
+                              max_iterations=70000,
+                              datapoints=poly_datapoints,
+                              gradient_func=gradient_of_least_squers_polynomial_with_l2,
+                              error_func=least_squere_error_polynomial_with_l2)
+
+print("P5 gradient descent polynomial L2 =", P5)
+Y_hat_poly_datapoints_2 = list(map(lambda p: (p.x, Y_hat_poly(p.x, P5.x, P5.y, P5.z, P5.q)), poly_datapoints))
 "Poly = end"
 
 
 "PLOT:"
+
+
 def to_x_y(dataset):
     return [[t[0] for t in dataset], [t[1] for t in dataset]]
+
 
 "Plot batch gradient descent"
 plt.subplot(2, 2, 1)
@@ -318,9 +336,19 @@ plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints_b), 'y--')
 plt.axis(xmin=0, ymin=0)
 
-"Plot sinusoid data"
+"Plot sinusoid data polynomial"
 plt.subplot(2, 2, 3)
 plt.title("Polynomial")
 plt.plot(*to_x_y(poly_dataset), 'r.')
-plt.plot(*to_x_y(Y_hat_poly_datapoints_q), 'y--')
+plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y--')
+plt.savefig('line.png')
+
+"Plot sinusoid data polynomial L2"
+plt.subplot(2, 2, 4)
+plt.title("Polynomial L2")
+plt.plot(*to_x_y(poly_dataset), 'r.')
+plt.plot(*to_x_y(Y_hat_poly_datapoints_2), 'y--')
+
+
+plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
 plt.savefig('line.png')
