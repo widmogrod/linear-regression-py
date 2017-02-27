@@ -75,7 +75,7 @@ def least_squere_error(point, datapoints):
 
     return least_squere_error_method(Y_hat, point, datapoints)
 
-def least_squere_error_poli(point, datapoints):
+def least_squere_error_polynomial(point, datapoints):
     def Y_hat(p, coefficients):
         return coefficients[0]*p.x**0 \
              + coefficients[1]*p.x**1 \
@@ -164,7 +164,7 @@ def gradient_descent_polynomial(point, learning_rate, error_treshold, max_iterat
         point = gradient_descent_step(
             learning_rate, point, gradient_of_least_squers_polynomial(datapoints))
 
-        e = least_squere_error_poli(point, datapoints)
+        e = least_squere_error_polynomial(point, datapoints)
         if abs(E - e) > error_treshold:
             E = e
         else:
