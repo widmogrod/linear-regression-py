@@ -296,7 +296,7 @@ poly_dataset = list(zip(sin_x_independent, sin_y_dependent))
 poly_datapoints = [Point(*x) for x in poly_dataset]
 
 P4 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
-                              learning_rate=0.001,
+                              learning_rate=0.0001,
                               error_treshold=0.0001,
                               max_iterations=2000,
                               datapoints=poly_datapoints,
@@ -308,7 +308,7 @@ print("P4 gradient descent polynomial =", P4)
 Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4)), sin_x_plot))
 
 P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
-                              learning_rate=0.001,
+                              learning_rate=0.0001,
                               error_treshold=0.0001,
                               max_iterations=2000,
                               datapoints=poly_datapoints,
