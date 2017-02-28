@@ -326,6 +326,7 @@ Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5.x, P5.y, P5.z,
 
 
 def to_x_y(dataset):
+    return list(zip(*dataset))
     return [[t[0] for t in dataset], [t[1] for t in dataset]]
 
 
