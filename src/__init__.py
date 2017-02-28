@@ -285,9 +285,9 @@ Y_hat_datapoints_b = list(
 Y_hat_poly = lambda x, A, B, C, D: (x**0*A + x**1*B + x**2*C + x**3*D)
 Y_hat_poly = curry(Y_hat_poly)
 
-samples=4
+samples=3
 sin_x = np.linspace(-pi, pi, samples)
-sin_x_2 = np.linspace(-pi, pi, 10000)
+sin_x_2 = np.linspace(-pi, pi, 1000)
 sin_y = [sin(x) for x in sin_x]
 sin_y += np.random.normal(scale=0.1, size=samples)
 poly_dataset = [(x[0], x[1]) for x in zip(sin_x, sin_y)]
@@ -310,8 +310,10 @@ P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
                               error_treshold=0.0001,
                               max_iterations=2000,
                               datapoints=poly_datapoints,
-                              gradient_func=gradient_of_least_squers_polynomial_with_l2(bias_coefficient=0.1),
-                              error_func=least_squere_error_polynomial_with_l2(bias_coefficient=0.1))
+                              gradient_func=gradient_of_least_squers_polynomial_with_l2(
+                                  bias_coefficient=0.3),
+                              error_func=least_squere_error_polynomial_with_l2(
+                                  bias_coefficient=0.3))
 
 print("P5 gradient descent polynomial L2 =", P5)
 Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5.x, P5.y, P5.z, P5.q)), sin_x_2))
