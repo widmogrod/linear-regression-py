@@ -86,8 +86,9 @@ def least_squere_error_polynomial(point, datapoints):
     return least_squere_error_method(Y_hat, point, datapoints)
 
 
-def least_squere_error_polynomial_with_l2(point, datapoints):
-    bias = point.l2()
+@curry
+def least_squere_error_polynomial_with_l2(point, datapoints, bias_coefficient=1):
+    bias = bias_coefficient * point.l2()
     return least_squere_error_polynomial(point, datapoints) + bias
 
 
@@ -159,14 +160,14 @@ def gradient_of_least_squers_polynomial(datapoints, betas):
 
 
 @curry
-def gradient_of_least_squers_polynomial_with_l2(datapoints, betas):
+def gradient_of_least_squers_polynomial_with_l2(datapoints, betas, bias_coefficient=1):
     l2 = betas.l2()
     p = gradient_of_least_squers_polynomial(datapoints, betas)
     return Point4(
-            x=p[0] + betas[0]/l2,
-            y=p[1] + betas[1]/l2,
-            z=p[2] + betas[2]/l2,
-            q=p[3] + betas[3]/l2
+            x=p[0] + betas[0]/l2 * bias_coefficient,
+            y=p[1] + betas[1]/l2 * bias_coefficient,
+            z=p[2] + betas[2]/l2 * bias_coefficient,
+            q=p[3] + betas[3]/l2 * bias_coefficient
             )
 
 
@@ -284,35 +285,36 @@ Y_hat_datapoints_b = list(
 Y_hat_poly = lambda x, A, B, C, D: (x**0*A + x**1*B + x**2*C + x**3*D)
 Y_hat_poly = curry(Y_hat_poly)
 
-samples=100
+samples=4
 sin_x = np.linspace(-pi, pi, samples)
+sin_x_2 = np.linspace(-pi, pi, 10000)
 sin_y = [sin(x) for x in sin_x]
 sin_y += np.random.normal(scale=0.1, size=samples)
 poly_dataset = [(x[0], x[1]) for x in zip(sin_x, sin_y)]
 poly_datapoints = [Point(x[0], x[1]) for x in poly_dataset]
 
 P4 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
-                              learning_rate=0.00001,
-                              error_treshold=0.000001,
-                              max_iterations=70000,
+                              learning_rate=0.001,
+                              error_treshold=0.0001,
+                              max_iterations=2000,
                               datapoints=poly_datapoints,
                               gradient_func=gradient_of_least_squers_polynomial,
                               error_func=least_squere_error_polynomial)
 
 
 print("P4 gradient descent polynomial =", P4)
-Y_hat_poly_datapoints_1 = list(map(lambda p: (p.x, Y_hat_poly(p.x, P4.x, P4.y, P4.z, P4.q)), poly_datapoints))
+Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4.x, P4.y, P4.z, P4.q)), sin_x_2))
 
 P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
-                              learning_rate=0.00001,
-                              error_treshold=0.000001,
-                              max_iterations=70000,
+                              learning_rate=0.001,
+                              error_treshold=0.0001,
+                              max_iterations=2000,
                               datapoints=poly_datapoints,
-                              gradient_func=gradient_of_least_squers_polynomial_with_l2,
-                              error_func=least_squere_error_polynomial_with_l2)
+                              gradient_func=gradient_of_least_squers_polynomial_with_l2(bias_coefficient=0.1),
+                              error_func=least_squere_error_polynomial_with_l2(bias_coefficient=0.1))
 
 print("P5 gradient descent polynomial L2 =", P5)
-Y_hat_poly_datapoints_2 = list(map(lambda p: (p.x, Y_hat_poly(p.x, P5.x, P5.y, P5.z, P5.q)), poly_datapoints))
+Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5.x, P5.y, P5.z, P5.q)), sin_x_2))
 "Poly = end"
 
 
@@ -340,14 +342,15 @@ plt.axis(xmin=0, ymin=0)
 plt.subplot(2, 2, 3)
 plt.title("Polynomial")
 plt.plot(*to_x_y(poly_dataset), 'r.')
-plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y--')
+plt.plot(sin_x_2, Y_hat_poly_datapoints_1, 'y')
+# plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y--')
 plt.savefig('line.png')
 
 "Plot sinusoid data polynomial L2"
 plt.subplot(2, 2, 4)
 plt.title("Polynomial L2")
 plt.plot(*to_x_y(poly_dataset), 'r.')
-plt.plot(*to_x_y(Y_hat_poly_datapoints_2), 'y--')
+plt.plot(sin_x_2, Y_hat_poly_datapoints_2, 'y')
 
 
 plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
