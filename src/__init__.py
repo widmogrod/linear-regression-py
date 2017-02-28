@@ -282,7 +282,7 @@ Y_hat_datapoints_b = list(
 
 
 "Poly - start"
-Y_hat_poly = lambda x, A, B, C, D: (x**0*A + x**1*B + x**2*C + x**3*D)
+Y_hat_poly = lambda x, c: (x**0*c[0] + x**1*c[1] + x**2*c[2] + x**3*c[3])
 Y_hat_poly = curry(Y_hat_poly)
 
 samples=3
@@ -305,7 +305,7 @@ P4 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
 
 
 print("P4 gradient descent polynomial =", P4)
-Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4.x, P4.y, P4.z, P4.q)), sin_x_plot))
+Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4)), sin_x_plot))
 
 P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
                               learning_rate=0.001,
@@ -318,7 +318,7 @@ P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
                                   bias_coefficient=0.1))
 
 print("P5 gradient descent polynomial L2 =", P5)
-Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5.x, P5.y, P5.z, P5.q)), sin_x_plot))
+Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5)), sin_x_plot))
 "Poly = end"
 
 
