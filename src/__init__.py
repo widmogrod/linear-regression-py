@@ -286,12 +286,14 @@ Y_hat_poly = lambda x, A, B, C, D: (x**0*A + x**1*B + x**2*C + x**3*D)
 Y_hat_poly = curry(Y_hat_poly)
 
 samples=3
-sin_x = np.linspace(-pi, pi, samples)
-sin_x_2 = np.linspace(-pi, pi, 1000)
-sin_y = [sin(x) for x in sin_x]
-sin_y += np.random.normal(scale=0.1, size=samples)
-poly_dataset = [(x[0], x[1]) for x in zip(sin_x, sin_y)]
-poly_datapoints = [Point(x[0], x[1]) for x in poly_dataset]
+
+sin_x_independent = np.linspace(-pi, pi, samples)
+sin_y_dependent = [sin(x) for x in sin_x_independent]
+sin_y_dependent += np.random.normal(scale=0.2, size=samples)
+
+sin_x_plot = np.arange(-pi, pi, 0.1)
+poly_dataset = list(zip(sin_x_independent, sin_y_dependent))
+poly_datapoints = [Point(*x) for x in poly_dataset]
 
 P4 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
                               learning_rate=0.001,
@@ -303,7 +305,7 @@ P4 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
 
 
 print("P4 gradient descent polynomial =", P4)
-Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4.x, P4.y, P4.z, P4.q)), sin_x_2))
+Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4.x, P4.y, P4.z, P4.q)), sin_x_plot))
 
 P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
                               learning_rate=0.001,
@@ -311,12 +313,12 @@ P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
                               max_iterations=2000,
                               datapoints=poly_datapoints,
                               gradient_func=gradient_of_least_squers_polynomial_with_l2(
-                                  bias_coefficient=0.3),
+                                  bias_coefficient=0.1),
                               error_func=least_squere_error_polynomial_with_l2(
-                                  bias_coefficient=0.3))
+                                  bias_coefficient=0.1))
 
 print("P5 gradient descent polynomial L2 =", P5)
-Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5.x, P5.y, P5.z, P5.q)), sin_x_2))
+Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5.x, P5.y, P5.z, P5.q)), sin_x_plot))
 "Poly = end"
 
 
@@ -331,29 +333,30 @@ def to_x_y(dataset):
 plt.subplot(2, 2, 1)
 plt.title("Gradient Descent")
 plt.plot(*to_x_y(dataset), 'r.')
-plt.plot(*to_x_y(Y_hat_datapoints), 'g-')
+plt.plot(*to_x_y(Y_hat_datapoints), 'y')
 
 "Plot stochastic gradient descent"
 plt.subplot(2, 2, 2)
 plt.title("Stochastic Gradient Descent")
 plt.plot(*to_x_y(dataset), 'r.')
-plt.plot(*to_x_y(Y_hat_datapoints_b), 'y--')
+plt.plot(*to_x_y(Y_hat_datapoints_b), 'y')
 plt.axis(xmin=0, ymin=0)
 
 "Plot sinusoid data polynomial"
 plt.subplot(2, 2, 3)
 plt.title("Polynomial")
+plt.ylim((-2,2))
 plt.plot(*to_x_y(poly_dataset), 'r.')
-plt.plot(sin_x_2, Y_hat_poly_datapoints_1, 'y')
+plt.plot(sin_x_plot, Y_hat_poly_datapoints_1, 'y')
 # plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y--')
 plt.savefig('line.png')
 
 "Plot sinusoid data polynomial L2"
 plt.subplot(2, 2, 4)
 plt.title("Polynomial L2")
+plt.ylim((-2,2))
 plt.plot(*to_x_y(poly_dataset), 'r.')
-plt.plot(sin_x_2, Y_hat_poly_datapoints_2, 'y')
-
+plt.plot(sin_x_plot, Y_hat_poly_datapoints_2, 'y')
 
 plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
 plt.savefig('line.png')
