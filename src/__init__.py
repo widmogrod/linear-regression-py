@@ -327,7 +327,6 @@ Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5.x, P5.y, P5.z,
 
 def to_x_y(dataset):
     return list(zip(*dataset))
-    return [[t[0] for t in dataset], [t[1] for t in dataset]]
 
 
 "Plot batch gradient descent"
@@ -348,8 +347,7 @@ plt.subplot(2, 2, 3)
 plt.title("Polynomial")
 plt.ylim((-2,2))
 plt.plot(*to_x_y(poly_dataset), 'r.')
-plt.plot(sin_x_plot, Y_hat_poly_datapoints_1, 'y')
-# plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y--')
+plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y')
 plt.savefig('line.png')
 
 "Plot sinusoid data polynomial L2"
@@ -357,7 +355,7 @@ plt.subplot(2, 2, 4)
 plt.title("Polynomial L2")
 plt.ylim((-2,2))
 plt.plot(*to_x_y(poly_dataset), 'r.')
-plt.plot(sin_x_plot, Y_hat_poly_datapoints_2, 'y')
+plt.plot(*to_x_y(Y_hat_poly_datapoints_2), 'y')
 
 plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
 plt.savefig('line.png')
