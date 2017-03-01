@@ -289,9 +289,9 @@ samples=3
 
 sin_x_independent = np.linspace(-pi, pi, samples)
 sin_y_dependent = [sin(x) for x in sin_x_independent]
-sin_y_dependent += np.random.normal(scale=0.2, size=samples)
+sin_y_dependent += np.random.normal(scale=0.8, size=samples)
 
-sin_x_plot = np.arange(-pi, pi, 0.1)
+sin_x_plot = np.arange(-pi*2, pi*2, 0.1)
 poly_dataset = list(zip(sin_x_independent, sin_y_dependent))
 poly_datapoints = [Point(*x) for x in poly_dataset]
 
