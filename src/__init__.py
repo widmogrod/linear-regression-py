@@ -295,10 +295,10 @@ sin_x_plot = np.arange(-pi, pi, 0.1)
 poly_dataset = list(zip(sin_x_independent, sin_y_dependent))
 poly_datapoints = [Point(*x) for x in poly_dataset]
 
-P4 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
-                              learning_rate=0.0001,
-                              error_treshold=0.0001,
-                              max_iterations=2000,
+P4 = generic_gradient_descent(point=Point4(1,1,1,1),
+                              learning_rate=0.001,
+                              error_treshold=0.000001,
+                              max_iterations=10000,
                               datapoints=poly_datapoints,
                               gradient_func=gradient_of_least_squers_polynomial,
                               error_func=least_squere_error_polynomial)
@@ -308,14 +308,14 @@ print("P4 gradient descent polynomial =", P4)
 Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4)), sin_x_plot))
 
 P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
-                              learning_rate=0.0001,
-                              error_treshold=0.0001,
-                              max_iterations=2000,
+                              learning_rate=0.001,
+                              error_treshold=0.000001,
+                              max_iterations=10000,
                               datapoints=poly_datapoints,
                               gradient_func=gradient_of_least_squers_polynomial_with_l2(
-                                  bias_coefficient=0.1),
+                                  bias_coefficient=0.2),
                               error_func=least_squere_error_polynomial_with_l2(
-                                  bias_coefficient=0.1))
+                                  bias_coefficient=0.2))
 
 print("P5 gradient descent polynomial L2 =", P5)
 Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5)), sin_x_plot))
