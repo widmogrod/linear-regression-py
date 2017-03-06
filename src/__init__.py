@@ -348,7 +348,6 @@ plt.title("Polynomial")
 plt.ylim((-2,2))
 plt.plot(*to_x_y(poly_dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y')
-plt.savefig('line.png')
 
 "Plot sinusoid data polynomial L2"
 plt.subplot(2, 2, 4)
