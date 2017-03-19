@@ -191,8 +191,10 @@ def learning(iterator, error_treshold=0.00001, E=0):
             break
 
 
-x_values = range(6)
-y_values = x_values + np.random.normal(scale=0.8, size=len(x_values))
+x_values = range(5) + np.random.normal(scale=3, size=5)
+
+x_plot = np.arange(-10, 10, 0.1)
+y_values = x_values + np.random.normal(scale=1.1, size=len(x_values))
 dataset = list(zip(x_values, y_values))
 
 
@@ -210,12 +212,15 @@ pipeline_o1 = max_iterations(learning(gd(
         df=gradient_of_least_squers,
     ),
     error_func=least_squere_error
-), error_treshold=0.00001), max=200)
+), error_treshold=0.01), max=200)
 
 pipeline_o1 = list(pipeline_o1)
 
 B1B2 = pipeline_o1[-1].point
+
 print("B1B2 gradient descent=", B1B2)
+Y_hat_datapoints = list(
+    map(lambda x: (x, Y_hat(x, B1B2.x, B1B2.y)), x_plot))
 
 pipeline_o2 = max_iterations(learning(gd(
     point=Point(0, 0),
@@ -225,17 +230,14 @@ pipeline_o2 = max_iterations(learning(gd(
         df=gradient_of_least_squers,
     ),
     error_func=least_squere_error
-), error_treshold=0.00001), max=200)
+), error_treshold=0.01), max=200)
 
 pipeline_o2 = list(pipeline_o2)
 B1B2_b = pipeline_o2[-1].point
 
 print("B1B2 stochstic gradient descent=", B1B2_b)
-
-Y_hat_datapoints = list(
-    map(lambda p: (p.x, Y_hat(p.x, B1B2.x, B1B2.y)), datapoints))
 Y_hat_datapoints_b = list(
-    map(lambda p: (p.x, Y_hat(p.x, B1B2_b.x, B1B2_b.y)), datapoints))
+    map(lambda x: (x, Y_hat(x, B1B2_b.x, B1B2_b.y)), x_plot))
 
 
 "Poly - start"
@@ -303,24 +305,27 @@ def to_x_y(dataset):
 "Plot batch gradient descent"
 plt.subplot(4, 2, 1)
 plt.title("Gradient Descent")
+plt.ylim((-20, 20))
 plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints), 'y')
 
 plt.subplot(4, 2, 3)
 plt.title("Gradien Descent Error")
 plt.ylim((0, 7))
+plt.xlim((0, 200))
 plt.plot([r.error for r in pipeline_o1], 'y')
 
 "Plot stochastic gradient descent"
 plt.subplot(4, 2, 2)
 plt.title("Stochastic Gradient Descent")
+plt.ylim((-20, 20))
 plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints_b), 'y')
-plt.axis(xmin=0, ymin=0)
 
 plt.subplot(4, 2, 4)
 plt.title("Stochastic Gradien Descent Error")
 plt.ylim((0, 7))
+plt.xlim((0, 200))
 plt.plot([r.error for r in pipeline_o2], 'y')
 
 "Plot sinusoid data polynomial"
@@ -348,4 +353,4 @@ plt.ylim((0, 1))
 plt.plot([r.error for r in pipeline_p2], 'y')
 
 plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
-plt.savefig('line.png', dip=2.0)
+plt.savefig('line.png', dpi=300)
