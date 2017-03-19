@@ -194,7 +194,7 @@ def learning(iterator, error_treshold=0.00001, E=0):
 x_values = range(5) + np.random.normal(scale=3, size=5)
 
 x_plot = np.arange(-10, 10, 0.1)
-y_values = x_values + np.random.normal(scale=1.1, size=len(x_values))
+y_values = x_values + np.random.normal(scale=0.5, size=len(x_values))
 dataset = list(zip(x_values, y_values))
 
 
@@ -263,7 +263,7 @@ pipeline_p1 = max_iterations(learning(gd(
         df=gradient_of_least_squers_polynomial
     ),
     error_func=least_squere_error_polynomial
-), error_treshold=0.00001), max=200)
+), error_treshold=0.000001), max=200)
 
 pipeline_p1 = list(pipeline_p1)
 
@@ -284,7 +284,7 @@ pipeline_p2 = max_iterations(learning(gd(
     error_func=least_squere_error_polynomial_with_l2(
         bias_coefficient=14.2
     )
-), error_treshold=0.00001), max=200)
+), error_treshold=0.000001), max=200)
 
 pipeline_p2 = list(pipeline_p2)
 
