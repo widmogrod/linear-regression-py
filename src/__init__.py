@@ -72,14 +72,15 @@ class Result:
 
 
 @curry
-def gradient_descent_step(learning_rate, point, df):
-    return point - (df(point=point) * learning_rate)
+def gradient_descent_step(learning_rate, point, datapoints, df):
+    return point - (df(point=point, datapoints=datapoints) * learning_rate)
 
 
 @curry
 def least_squere_error_method(Y_hat, coefficients, datapoints):
     return sum([(Y_hat(p, coefficients) - p.y)**2 for p in datapoints]) / len(datapoints)
 
+@curry
 def least_squere_error(point, datapoints):
     def Y_hat(p, coefficients):
         return coefficients[0]*p.x**0 + coefficients[1]*p.x**1
@@ -104,21 +105,6 @@ def least_squere_error_polynomial_with_l2(point, datapoints, bias_coefficient=1)
     return least_squere_error_polynomial(point, datapoints) + bias
 
 
-def gradient_descent(point, learning_rate, error_treshold, max_iterations, datapoints):
-    E = 0
-    for i in range(max_iterations):
-        point = gradient_descent_step(
-            learning_rate, point, gradient_of_least_squers(datapoints))
-
-        e = least_squere_error(point, datapoints)
-        if abs(E - e) > error_treshold:
-            E = e
-        else:
-            return point
-
-    return point
-
-
 @curry
 def gradient_of_least_squers(datapoints, point):
     A = point.x
@@ -130,7 +116,7 @@ def gradient_of_least_squers(datapoints, point):
 
 
 @curry
-def stochastic_df(p, point):
+def stochastic_df(p, point, datapoints):
     A = point.x
     B = point.y
     return Point(
@@ -145,7 +131,10 @@ def stochastic_gradient_descent(point, learning_rate, error_treshold, max_iterat
         shuffle(datapoints)
         for p in datapoints:
             point = gradient_descent_step(
-                learning_rate, point, stochastic_df(p))
+                learning_rate=learning_rate,
+                point=point,
+                df=stochastic_df(p),
+                datapoints=datapoints)
 
         e = least_squere_error(point, datapoints)
         if abs(E - e) > error_treshold:
@@ -188,7 +177,7 @@ def generic_gradient_descent(gradient_func, error_func, point,
     E = 0
     for i in range(max_iterations):
         point = gradient_descent_step(
-            learning_rate, point, gradient_func(datapoints))
+            learning_rate, point, gradient_func(datapoints), datapoints)
 
         e = error_func(point, datapoints)
         if abs(E - e) > error_treshold:
@@ -200,10 +189,10 @@ def generic_gradient_descent(gradient_func, error_func, point,
 
 
 @curry
-def gd(gradient_func, error_func, point):
+def gd(gradient_func, error_func, point, datapoints):
     while(True):
-        point = gradient_func(point=point)
-        error = error_func(point=point)
+        point = gradient_func(point=point, datapoints=datapoints)
+        error = error_func(point=point, datapoints=datapoints)
         yield Result(point, error)
 
 
@@ -237,12 +226,37 @@ Y_hat = curry(Y_hat)
 
 datapoints = [Point(x[0], x[1]) for x in dataset]
 
-B1B2 = gradient_descent(point=Point(0, 0),
-                        learning_rate=0.0001,
-                        error_treshold=0.001,
-                        max_iterations=1000,
-                        datapoints=datapoints)
+pipeline_o1 = max_iterations(learning(gd(
+    point=Point(0, 0),
+    datapoints=datapoints,
+    gradient_func=gradient_descent_step(
+        learning_rate=0.001,
+        df=gradient_of_least_squers,
+    ),
+    error_func=least_squere_error
+), error_treshold=0.001), max=200)
+
+pipeline_o1 = list(pipeline_o1)
+
+B1B2 = pipeline_o1[-1].point
 print("B1B2 gradient descent=", B1B2)
+
+# pipeline_o2 = max_iterations(learning(gd(
+#     point=Point(0, 0),
+#     gradient_func=gradient_descent_step(
+#         learning_rate=0.001,
+#         df=gradient_of_least_squers(
+#             datapoints=datapoints
+#         )
+#     ),
+#     error_func=least_squere_error(
+#         datapoints=datapoints
+#     )
+# ), error_treshold=0.001), max=200)
+#
+# pipeline_o2 = list(pipeline_o2)
+#
+# B1B2 = pipeline_o2[-1].point
 
 B1B2_b = stochastic_gradient_descent(point=Point(0, 0),
                                      learning_rate=0.001,
@@ -275,15 +289,12 @@ poly_datapoints = [Point(*x) for x in poly_dataset]
 
 pipeline_p1 = max_iterations(learning(gd(
     point=Point4(1, 1, 1, 1),
+    datapoints=poly_datapoints,
     gradient_func=gradient_descent_step(
         learning_rate=0.001,
-        df=gradient_of_least_squers_polynomial(
-            datapoints=poly_datapoints
-        )
+        df=gradient_of_least_squers_polynomial
     ),
-    error_func=least_squere_error_polynomial(
-        datapoints=poly_datapoints
-    )
+    error_func=least_squere_error_polynomial
 ), error_treshold=0.00001), max=200)
 
 pipeline_p1 = list(pipeline_p1)
@@ -295,16 +306,15 @@ Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4)), sin_x_plot)
 
 pipeline_p2 = max_iterations(learning(gd(
     point=Point4(1, 1, 1, 1),
+    datapoints=poly_datapoints,
     gradient_func=gradient_descent_step(
         learning_rate=0.001,
         df=gradient_of_least_squers_polynomial_with_l2(
-            bias_coefficient=14.2,
-            datapoints=poly_datapoints
+            bias_coefficient=14.2
         )
     ),
     error_func=least_squere_error_polynomial_with_l2(
-        bias_coefficient=14.2,
-        datapoints=poly_datapoints
+        bias_coefficient=14.2
     )
 ), error_treshold=0.00001), max=200)
 
@@ -329,6 +339,11 @@ plt.subplot(4, 2, 1)
 plt.title("Gradient Descent")
 plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints), 'y')
+
+plt.subplot(4, 2, 3)
+plt.title("Gradien Descent Error")
+plt.ylim((0, 20))
+plt.plot([r.error for r in pipeline_o1], 'y')
 
 "Plot stochastic gradient descent"
 plt.subplot(4, 2, 2)
