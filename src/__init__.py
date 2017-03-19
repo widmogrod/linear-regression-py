@@ -77,6 +77,19 @@ def gradient_descent_step(learning_rate, point, datapoints, df):
 
 
 @curry
+def gradient_descent_stochastic_step(learning_rate, point, datapoints, df):
+    shuffle(datapoints)
+    for p in datapoints:
+        point = gradient_descent_step(
+            learning_rate=learning_rate,
+            point=point,
+            df=stochastic_df(p),
+            datapoints=datapoints)
+
+    return point
+
+
+@curry
 def least_squere_error_method(Y_hat, coefficients, datapoints):
     return sum([(Y_hat(p, coefficients) - p.y)**2 for p in datapoints]) / len(datapoints)
 
@@ -125,27 +138,6 @@ def stochastic_df(p, point, datapoints):
     )
 
 
-def stochastic_gradient_descent(point, learning_rate, error_treshold, max_iterations, datapoints):
-    E = 0
-    for i in range(max_iterations):
-        shuffle(datapoints)
-        for p in datapoints:
-            point = gradient_descent_step(
-                learning_rate=learning_rate,
-                point=point,
-                df=stochastic_df(p),
-                datapoints=datapoints)
-
-        e = least_squere_error(point, datapoints)
-        if abs(E - e) > error_treshold:
-            E = e
-        else:
-            return point
-
-    return point
-
-
-
 @curry
 def gradient_of_least_squers_polynomial(datapoints, point):
     A = point.x
@@ -170,22 +162,6 @@ def gradient_of_least_squers_polynomial_with_l2(datapoints, point, bias_coeffici
             z=p[2] + point[2]/l2 * bias_coefficient,
             q=p[3] + point[3]/l2 * bias_coefficient
             )
-
-
-def generic_gradient_descent(gradient_func, error_func, point,
-                             learning_rate, error_treshold, max_iterations, datapoints):
-    E = 0
-    for i in range(max_iterations):
-        point = gradient_descent_step(
-            learning_rate, point, gradient_func(datapoints), datapoints)
-
-        e = error_func(point, datapoints)
-        if abs(E - e) > error_treshold:
-            E = e
-        else:
-            return point
-
-    return point
 
 
 @curry
@@ -234,35 +210,25 @@ pipeline_o1 = max_iterations(learning(gd(
         df=gradient_of_least_squers,
     ),
     error_func=least_squere_error
-), error_treshold=0.001), max=200)
+), error_treshold=0.00001), max=200)
 
 pipeline_o1 = list(pipeline_o1)
 
 B1B2 = pipeline_o1[-1].point
 print("B1B2 gradient descent=", B1B2)
 
-# pipeline_o2 = max_iterations(learning(gd(
-#     point=Point(0, 0),
-#     gradient_func=gradient_descent_step(
-#         learning_rate=0.001,
-#         df=gradient_of_least_squers(
-#             datapoints=datapoints
-#         )
-#     ),
-#     error_func=least_squere_error(
-#         datapoints=datapoints
-#     )
-# ), error_treshold=0.001), max=200)
-#
-# pipeline_o2 = list(pipeline_o2)
-#
-# B1B2 = pipeline_o2[-1].point
+pipeline_o2 = max_iterations(learning(gd(
+    point=Point(0, 0),
+    datapoints=datapoints,
+    gradient_func=gradient_descent_stochastic_step(
+        learning_rate=0.001,
+        df=gradient_of_least_squers,
+    ),
+    error_func=least_squere_error
+), error_treshold=0.00001), max=200)
 
-B1B2_b = stochastic_gradient_descent(point=Point(0, 0),
-                                     learning_rate=0.001,
-                                     error_treshold=0.001,
-                                     max_iterations=1000,
-                                     datapoints=datapoints)
+pipeline_o2 = list(pipeline_o2)
+B1B2_b = pipeline_o2[-1].point
 
 print("B1B2 stochstic gradient descent=", B1B2_b)
 
@@ -342,7 +308,7 @@ plt.plot(*to_x_y(Y_hat_datapoints), 'y')
 
 plt.subplot(4, 2, 3)
 plt.title("Gradien Descent Error")
-plt.ylim((0, 20))
+plt.ylim((0, 7))
 plt.plot([r.error for r in pipeline_o1], 'y')
 
 "Plot stochastic gradient descent"
@@ -351,6 +317,11 @@ plt.title("Stochastic Gradient Descent")
 plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints_b), 'y')
 plt.axis(xmin=0, ymin=0)
+
+plt.subplot(4, 2, 4)
+plt.title("Stochastic Gradien Descent Error")
+plt.ylim((0, 7))
+plt.plot([r.error for r in pipeline_o2], 'y')
 
 "Plot sinusoid data polynomial"
 plt.subplot(4, 2, 5)
