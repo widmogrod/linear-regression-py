@@ -272,16 +272,8 @@ sin_x_plot = np.arange(-pi*2, pi*2, 0.1)
 poly_dataset = list(zip(sin_x_independent, sin_y_dependent))
 poly_datapoints = [Point(*x) for x in poly_dataset]
 
-# P4 = generic_gradient_descent(point=Point4(1,1,1,1),
-#                               learning_rate=0.001,
-#                               error_treshold=0.000001,
-#                               max_iterations=10000,
-#                               datapoints=poly_datapoints,
-#                               gradient_func=gradient_of_least_squers_polynomial,
-#                               error_func=least_squere_error_polynomial)
-#
 
-pipeline = max_iterations(learning(gd(
+pipeline_p1 = max_iterations(learning(gd(
     point=Point4(1, 1, 1, 1),
     gradient_func=gradient_descent_step(
         learning_rate=0.001,
@@ -292,24 +284,33 @@ pipeline = max_iterations(learning(gd(
     error_func=least_squere_error_polynomial(
         datapoints=poly_datapoints
     )
-), error_treshold=0.01), max=100)
+), error_treshold=0.00001), max=200)
 
-pipeline = list(pipeline)
+pipeline_p1 = list(pipeline_p1)
 
-P4 = pipeline[-1].point
+P4 = pipeline_p1[-1].point
 
 print("P4 gradient descent polynomial =", P4)
 Y_hat_poly_datapoints_1 = list(map(lambda x: (x, Y_hat_poly(x, P4)), sin_x_plot))
 
-P5 = generic_gradient_descent(point=Point4(1, 1, 1, 1),
-                              learning_rate=0.001,
-                              error_treshold=0.000001,
-                              max_iterations=10000,
-                              datapoints=poly_datapoints,
-                              gradient_func=gradient_of_least_squers_polynomial_with_l2(
-                                  bias_coefficient=0.2),
-                              error_func=least_squere_error_polynomial_with_l2(
-                                  bias_coefficient=0.2))
+pipeline_p2 = max_iterations(learning(gd(
+    point=Point4(1, 1, 1, 1),
+    gradient_func=gradient_descent_step(
+        learning_rate=0.001,
+        df=gradient_of_least_squers_polynomial_with_l2(
+            bias_coefficient=14.2,
+            datapoints=poly_datapoints
+        )
+    ),
+    error_func=least_squere_error_polynomial_with_l2(
+        bias_coefficient=14.2,
+        datapoints=poly_datapoints
+    )
+), error_treshold=0.00001), max=200)
+
+pipeline_p2 = list(pipeline_p2)
+
+P5 = pipeline_p2[-1].point
 
 print("P5 gradient descent polynomial L2 =", P5)
 Y_hat_poly_datapoints_2 = list(map(lambda x: (x, Y_hat_poly(x, P5)), sin_x_plot))
@@ -324,36 +325,41 @@ def to_x_y(dataset):
 
 
 "Plot batch gradient descent"
-plt.subplot(3, 2, 1)
+plt.subplot(4, 2, 1)
 plt.title("Gradient Descent")
 plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints), 'y')
 
 "Plot stochastic gradient descent"
-plt.subplot(3, 2, 2)
+plt.subplot(4, 2, 2)
 plt.title("Stochastic Gradient Descent")
 plt.plot(*to_x_y(dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_datapoints_b), 'y')
 plt.axis(xmin=0, ymin=0)
 
 "Plot sinusoid data polynomial"
-plt.subplot(3, 2, 3)
+plt.subplot(4, 2, 5)
 plt.title("Polynomial")
 plt.ylim((-2, 2))
 plt.plot(*to_x_y(poly_dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_poly_datapoints_1), 'y')
 
-plt.subplot(3, 2, 5)
+plt.subplot(4, 2, 7)
 plt.title("Polynomial Error")
-plt.ylim((0, 50))
-plt.plot([r.error for r in pipeline], 'y')
+plt.ylim((0, 1))
+plt.plot([r.error for r in pipeline_p1], 'y')
 
 "Plot sinusoid data polynomial L2"
-plt.subplot(3, 2, 4)
+plt.subplot(4, 2, 6)
 plt.title("Polynomial L2")
 plt.ylim((-2, 2))
 plt.plot(*to_x_y(poly_dataset), 'r.')
 plt.plot(*to_x_y(Y_hat_poly_datapoints_2), 'y')
 
+plt.subplot(4, 2, 8)
+plt.title("Polynomial L2 Error")
+plt.ylim((0, 1))
+plt.plot([r.error for r in pipeline_p2], 'y')
+
 plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
-plt.savefig('line.png')
+plt.savefig('line.png', dip=2.0)
